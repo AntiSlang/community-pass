@@ -56,7 +56,7 @@ function App() {
       messages: [
         {
           address: COLLECTION_ADDRESS,
-          amount: toNano("0.1").toString(),
+          amount: toNano("0.30").toString(),
           payload: body.toBoc().toString("base64"),
         },
       ],

@@ -4,7 +4,7 @@ import { Address, beginCell, toNano } from 'ton-core';
 import './App.css';
 
 // ТВОЙ АДРЕС КОНТРАКТА (Mainnet)
-const COLLECTION_ADDRESS = "EQC5ViPcJ2tTUgIAIf5jXhHDBnqHAAZsTgul7YoLvxBo85mo";
+const COLLECTION_ADDRESS = "EQARIHTTntpku28AfEMxv0RnvMApxdy8dCnYhk4BA7wzhtGF";
 
 function App() {
   const userAddress = useTonAddress();

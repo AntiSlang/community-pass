@@ -4,7 +4,7 @@ import { Address, beginCell, toNano } from 'ton-core';
 import './App.css';
 
 // ТВОЙ АДРЕС КОНТРАКТА (Mainnet)
-const COLLECTION_ADDRESS = "EQAw2BmHuWlOIuaAxE8ysVQ8xLhsWuNW2GenxZry3ngrZHlz";
+const COLLECTION_ADDRESS = "EQC5ViPcJ2tTUgIAIf5jXhHDBnqHAAZsTgul7YoLvxBo85mo";
 
 function App() {
   const userAddress = useTonAddress();
@@ -47,7 +47,7 @@ function App() {
     // УДАЛИ СТРОКУ: const COLLECTION_ADDRESS = "..." (она уже есть вверху)
 
     const body = beginCell()
-      .storeUint(0x2f4b3c3b, 32) // Твой правильный Opcode
+      .storeUint(0x2F4A7CBB, 32) // Твой правильный Opcode
       .storeUint(0, 64)
       .endCell();
 

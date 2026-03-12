@@ -4,7 +4,7 @@ import { Address, beginCell, toNano } from 'ton-core';
 import './App.css';
 
 // ТВОЙ АДРЕС КОНТРАКТА (Mainnet)
-const COLLECTION_ADDRESS_TEST = "EQC5ViPcJ2tTUgIAIf5jXhHDBnqHAAZsTgul7YoLvxBo85mo";
+const COLLECTION_ADDRESS = "EQC5ViPcJ2tTUgIAIf5jXhHDBnqHAAZsTgul7YoLvxBo85mo";
 
 function App() {
   const userAddress = useTonAddress();
@@ -55,7 +55,7 @@ function App() {
       validUntil: Math.floor(Date.now() / 1000) + 600,
       messages: [
         {
-          address: COLLECTION_ADDRESS_TEST,
+          address: COLLECTION_ADDRESS,
           amount: toNano("0.30").toString(),
           payload: body.toBoc().toString("base64"),
         },

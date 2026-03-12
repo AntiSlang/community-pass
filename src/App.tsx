@@ -3,7 +3,6 @@ import { TonConnectButton, useTonAddress, useTonConnectUI } from '@tonconnect/ui
 import { Address, beginCell, toNano } from 'ton-core';
 import './App.css';
 
-// ТВОЙ АДРЕС КОНТРАКТА (Mainnet)
 const COLLECTION_ADDRESS = "EQARIHTTntpku28AfEMxv0RnvMApxdy8dCnYhk4BA7wzhtGF";
 
 function App() {
@@ -12,16 +11,13 @@ function App() {
   const [nftData, setNftData] = useState<{ owned: boolean, index?: number } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 1. Функция проверки наличия NFT через TonAPI
   const checkOwnership = async (address: string) => {
     setLoading(true);
     try {
-      // Используем публичный API TonAPI для Mainnet
       const response = await fetch(`https://tonapi.io/v2/accounts/${address}/nfts?collection=${COLLECTION_ADDRESS}`);
       const data = await response.json();
       
       if (data.nft_items && data.nft_items.length > 0) {
-        // Берем индекс первой найденной NFT
         const index = data.nft_items[0].index;
         setNftData({ owned: true, index: index });
       } else {
@@ -41,13 +37,9 @@ function App() {
     }
   }, [userAddress]);
 
-  // 2. Функция Минта (создания) NFT
-  // 1. ВСТАВЬ НОВЫЙ АДРЕС ИЗ ТЕРМИНАЛА (он НЕ будет EQBDRBE...)
   const mintNft = async () => {
-    // УДАЛИ СТРОКУ: const COLLECTION_ADDRESS = "..." (она уже есть вверху)
-
     const body = beginCell()
-      .storeUint(0x2F47783B, 32) // Твой правильный Opcode
+      .storeUint(0x2F47783B, 32)
       .storeUint(0, 64)
       .endCell();
 
@@ -56,7 +48,7 @@ function App() {
       messages: [
         {
           address: COLLECTION_ADDRESS,
-          amount: toNano("0.30").toString(),
+          amount: toNano("0.10").toString(),
           payload: body.toBoc().toString("base64"),
         },
       ],

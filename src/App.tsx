@@ -47,7 +47,7 @@ function App() {
     // УДАЛИ СТРОКУ: const COLLECTION_ADDRESS = "..." (она уже есть вверху)
 
     const body = beginCell()
-      .storeUint(0x2F4A7CBB, 32) // Твой правильный Opcode
+      .storeUint(0x2F47783B, 32) // Твой правильный Opcode
       .storeUint(0, 64)
       .endCell();
 

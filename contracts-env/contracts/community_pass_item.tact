@@ -24,12 +24,27 @@ contract CommunityPassItem {
     }
 
     get fun get_nft_data(): GetNftData {
+        // Разбиваем длинный JSON на части, чтобы каждая была меньше 127 символов
+        let url1: String = "data:application/json,{\"name\":\"Community Pass #";
+        let url2: String = "\",\"description\":\"Official member of the community\",";
+        let url3: String = "\"image\":\"https://iili.io/qkkvTpn.md.jpg\"}";
+
+        // Склеиваем их цепочкой (Snake format), переводим String в Slice
+        let tail: Cell = beginCell().storeSlice(url3.asSlice()).endCell();
+        let middle: Cell = beginCell().storeSlice(url2.asSlice()).storeRef(tail).endCell();
+        let content: Cell = beginCell()
+            .storeUint(0x01, 8) // 0x01 означает Off-chain URI
+            .storeSlice(url1.asSlice())
+            .storeSlice(self.item_index.toString().asSlice()) // добавляем номер
+            .storeRef(middle)
+            .endCell();
+
         return GetNftData{
             is_initialized: self.initialized,
             index: self.item_index,
             collection_address: self.collection_address,
             owner_address: self.owner!!,
-            individual_content: beginCell().storeUint(self.item_index, 32).endCell()
+            individual_content: content
         };
     }
 }

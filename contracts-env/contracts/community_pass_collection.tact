@@ -40,9 +40,21 @@ contract CommunityPassCollection with Deployable {
 }
 
     get fun get_collection_data(): CollectionData {
+        let url1: String = "data:application/json,{\"name\":\"Community Pass Collection\",";
+        let url2: String = "\"description\":\"Access to our private club\",";
+        let url3: String = "\"image\":\"https://iili.io/qkkvTpn.md.jpg\"}";
+        
+        let tail: Cell = beginCell().storeSlice(url3.asSlice()).endCell();
+        let middle: Cell = beginCell().storeSlice(url2.asSlice()).storeRef(tail).endCell();
+        let content: Cell = beginCell()
+            .storeUint(0x01, 8)
+            .storeSlice(url1.asSlice())
+            .storeRef(middle)
+            .endCell();
+
         return CollectionData{
             next_item_index: self.next_item_index,
-            collection_content: emptyCell(),
+            collection_content: content,
             owner_address: self.owner_address
         };
     }

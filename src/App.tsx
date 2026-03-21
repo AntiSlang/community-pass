@@ -3,13 +3,19 @@ import { TonConnectButton, useTonAddress, useTonConnectUI } from '@tonconnect/ui
 import { Address, beginCell, toNano } from 'ton-core';
 import './App.css';
 
-const COLLECTION_ADDRESS = "EQARIHTTntpku28AfEMxv0RnvMApxdy8dCnYhk4BA7wzhtGF";
+const COLLECTION_ADDRESS = "EQCGGT4-z5cVI4Sb0tN6XFbpsoA3lUQJJGbmjvQZvxUwTpTv";
 
 function App() {
   const userAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
   const [nftData, setNftData] = useState<{ owned: boolean, index?: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [vote, setVote] = useState<string | null>(localStorage.getItem('daoVote'));
+
+  const handleVote = (option: string) => {
+    setVote(option);
+    localStorage.setItem('daoVote', option);
+  };
 
   const checkOwnership = async (address: string) => {
     setLoading(true);
@@ -75,13 +81,46 @@ function App() {
           <p>Пожалуйста, подключите кошелек TON</p>
         ) : loading ? (
           <p>Проверяем блокчейн...</p>
-        ) : nftData?.owned ? (
+       ) : nftData?.owned ? (
           <div>
             <h2 style={{ color: '#4caf50' }}>✅ Доступ разрешен</h2>
             <div style={{ fontSize: '24px', margin: '20px 0', padding: '20px', background: '#222', borderRadius: '10px' }}>
               CommunityPass #{nftData.index}
             </div>
             <p>Вы являетесь участником сообщества.</p>
+
+            {/* БЛОК ОПРОСА ДЛЯ УЧАСТНИКОВ */}
+            <div style={{ marginTop: '40px', padding: '20px', background: '#2a2a2a', borderRadius: '15px', border: '1px solid #444' }}>
+              <h3>🗳 Голосование сообщества</h3>
+              <p>Понизить стоимость минта до 0.15 TON?</p>
+              
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => handleVote('yes')}
+                  style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: 'white', backgroundColor: vote === 'yes' ? '#4caf50' : '#444' }}
+                >
+                  Да
+                </button>
+                <button 
+                  onClick={() => handleVote('no')}
+                  style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: 'white', backgroundColor: vote === 'no' ? '#f44336' : '#444' }}
+                >
+                  Нет
+                </button>
+                <button 
+                  onClick={() => handleVote('raise')}
+                  style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: 'white', backgroundColor: vote === 'raise' ? '#ff9800' : '#444' }}
+                >
+                  Повысить до 0.3
+                </button>
+              </div>
+              {vote && (
+                <p style={{ color: '#aaa', fontSize: '13px', marginTop: '15px' }}>
+                  Ваш голос учтен. Вы можете изменить его в любой момент.
+                </p>
+              )}
+            </div>
+
           </div>
         ) : (
           <div>

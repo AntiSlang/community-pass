@@ -86,7 +86,8 @@ function App() {
       const res = await fetch(`https://tonapi.io/v2/blockchain/accounts/${COLLECTION_ADDRESS}/methods/get_user_vote?args=${address}`);
       const data = await res.json();
       
-      if (data.success && data.stack[0].type === 'num') {
+      // 👈 Добавил проверку на наличие данных в stack
+      if (data.success && data.stack && data.stack.length > 0 && data.stack[0].type === 'num') {
         const val = parseInt(data.stack[0].num);
         if (val === 1) setVote('vote_yes');
         if (val === 2) setVote('vote_no');
@@ -121,7 +122,7 @@ function App() {
       messages: [
         {
           address: COLLECTION_ADDRESS,
-          amount: toNano("0.02").toString(), 
+          amount: toNano("0.05").toString(), 
           payload: body.toBoc().toString("base64"),
         },
       ],

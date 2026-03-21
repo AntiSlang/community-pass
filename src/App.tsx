@@ -3,7 +3,7 @@ import { TonConnectButton, useTonAddress, useTonConnectUI } from '@tonconnect/ui
 import { beginCell, toNano } from 'ton-core';
 import './App.css';
 
-const COLLECTION_ADDRESS = "EQBvG0IcQOjrroo-mIjuKVNns1bRA7jETrFZUPsA3njleYWI";
+const COLLECTION_ADDRESS = "EQBuQOTbybO1xacRv_2lFOuQZUNkqDb1TYkbU-wAGAtJRgJN";
 
 function App() {
   const userAddress = useTonAddress();

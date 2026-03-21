@@ -3,50 +3,75 @@ import { TonConnectButton, useTonAddress, useTonConnectUI } from '@tonconnect/ui
 import { Address, beginCell, toNano } from 'ton-core';
 import './App.css';
 
-const COLLECTION_ADDRESS = "EQCGGT4-z5cVI4Sb0tN6XFbpsoA3lUQJJGbmjvQZvxUwTpTv";
+const COLLECTION_ADDRESS = "EQBvG0IcQOjrroo-mIjuKVNns1bRA7jETrFZUPsA3njleYWI";
 
 function App() {
   const userAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
   const [nftData, setNftData] = useState<{ owned: boolean, index?: number } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [vote, setVote] = useState<string | null>(localStorage.getItem('daoVote'));
+  
+  // Стейты для DAO
+  const [vote, setVote] = useState<string | null>(null);
+  const [voteStats, setVoteStats] = useState({ yes: 0, no: 0, raise: 0, total: 0 });
 
-  const handleVote = (option: string) => {
-    setVote(option);
-    localStorage.setItem('daoVote', option);
-  };
-
-  const checkOwnership = async (address: string) => {
-    setLoading(true);
+  // 1. Читаем ОБЩУЮ статистику напрямую со смарт-контракта
+  const fetchVotingStats = async () => {
     try {
-      const response = await fetch(`https://tonapi.io/v2/accounts/${address}/nfts?collection=${COLLECTION_ADDRESS}`);
-      const data = await response.json();
+      const res = await fetch(`https://tonapi.io/v2/blockchain/accounts/${COLLECTION_ADDRESS}/methods/get_voting_stats`);
+      const data = await res.json();
       
-      if (data.nft_items && data.nft_items.length > 0) {
-        const index = data.nft_items[0].index;
-        setNftData({ owned: true, index: index });
-      } else {
-        setNftData({ owned: false });
+      // TonAPI возвращает массив stack, где лежат наши цифры в HEX формате
+      if (data.success && data.stack.length === 4) {
+        setVoteStats({
+          yes: parseInt(data.stack[0].num, 16),
+          no: parseInt(data.stack[1].num, 16),
+          raise: parseInt(data.stack[2].num, 16),
+          total: parseInt(data.stack[3].num, 16),
+        });
       }
     } catch (e) {
-      console.error("Ошибка при проверке NFT:", e);
+      console.error("Ошибка загрузки статистики со смарт-контракта:", e);
     }
-    setLoading(false);
   };
 
+  // 2. Читаем ЛИЧНЫЙ голос юзера со смарт-контракта (если он уже голосовал)
+  const fetchUserVote = async (address: string) => {
+    try {
+      // Передаем адрес кошелька как аргумент в геттер
+      const res = await fetch(`https://tonapi.io/v2/blockchain/accounts/${COLLECTION_ADDRESS}/methods/get_user_vote?args=${address}`);
+      const data = await res.json();
+      
+      // Если юзер голосовал, вернется число (1, 2 или 3). Если нет — type будет "null"
+      if (data.success && data.stack[0].type === 'num') {
+        const val = parseInt(data.stack[0].num, 16);
+        if (val === 1) setVote('vote_yes');
+        if (val === 2) setVote('vote_no');
+        if (val === 3) setVote('vote_raise');
+      }
+    } catch (e) {
+      console.error("Ошибка загрузки голоса пользователя:", e);
+    }
+  };
+
+  // Вызываем при загрузке
   useEffect(() => {
+    fetchVotingStats(); // Статистика грузится всегда
     if (userAddress) {
       checkOwnership(userAddress);
+      fetchUserVote(userAddress); // Голос конкретного человека
     } else {
       setNftData(null);
+      setVote(null);
     }
   }, [userAddress]);
 
-  const mintNft = async () => {
+  // 3. ОТПРАВЛЯЕМ ТРАНЗАКЦИЮ ГОЛОСОВАНИЯ В БЛОКЧЕЙН
+  const handleVote = async (option: string) => {
+    // Формируем текстовое сообщение: записываем нули (опкод текста) и саму строку
     const body = beginCell()
-      .storeUint(0x2F47783B, 32)
-      .storeUint(0, 64)
+      .storeUint(0, 32)
+      .storeStringTail(option)
       .endCell();
 
     const transaction = {
@@ -54,7 +79,7 @@ function App() {
       messages: [
         {
           address: COLLECTION_ADDRESS,
-          amount: toNano("0.10").toString(),
+          amount: toNano("0.02").toString(), // Сумма газа (остаток вернется)
           payload: body.toBoc().toString("base64"),
         },
       ],
@@ -62,9 +87,13 @@ function App() {
 
     try {
       await tonConnectUI.sendTransaction(transaction);
-      alert("Транзакция отправлена!");
+      alert("Транзакция отправлена в блокчейн! Статистика обновится через ~15 секунд.");
+      setVote(option); // Оптимистично меняем UI
+      
+      // Блокчейну нужно время на запись блока, обновляем через 15 сек
+      setTimeout(fetchVotingStats, 15000); 
     } catch (e) {
-      alert("Ошибка: " + e);
+      alert("Ошибка или отмена: " + e);
     }
   };
 
@@ -88,6 +117,7 @@ function App() {
               CommunityPass #{nftData.index}
             </div>
             <p>Вы являетесь участником сообщества.</p>
+            <p>Наш чат: https://t.me/+RxLNa8Oqxv_IgCqd</p>
 
             {/* БЛОК ОПРОСА ДЛЯ УЧАСТНИКОВ */}
             <div style={{ marginTop: '40px', padding: '20px', background: '#2a2a2a', borderRadius: '15px', border: '1px solid #444' }}>
@@ -96,19 +126,19 @@ function App() {
               
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
                 <button 
-                  onClick={() => handleVote('yes')}
+                  onClick={() => handleVote('vote_yes')}
                   style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: 'white', backgroundColor: vote === 'yes' ? '#4caf50' : '#444' }}
                 >
                   Да
                 </button>
                 <button 
-                  onClick={() => handleVote('no')}
+                  onClick={() => handleVote('vote_no')}
                   style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: 'white', backgroundColor: vote === 'no' ? '#f44336' : '#444' }}
                 >
                   Нет
                 </button>
                 <button 
-                  onClick={() => handleVote('raise')}
+                  onClick={() => handleVote('vote_raise')}
                   style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: 'white', backgroundColor: vote === 'raise' ? '#ff9800' : '#444' }}
                 >
                   Повысить до 0.3

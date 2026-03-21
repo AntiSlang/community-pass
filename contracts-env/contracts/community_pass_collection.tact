@@ -10,18 +10,16 @@ contract CommunityPassCollection with Deployable {
     owner_address: Address;
     created_at: Int as uint64;
 
-    // НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ DAO-ГОЛОСОВАНИЯ
     votes_yes: Int as uint32 = 0;
     votes_no: Int as uint32 = 0;
     votes_raise: Int as uint32 = 0;
-    voted: map<Address, Int>; // Хранит: Адрес -> номер выбора (1, 2 или 3)
+    voted: map<Address, Int>;
 
     init() {
         self.owner_address = sender();
         self.created_at = now();
     }
 
-    // Обработка текстовых сообщений голосования (с фронтенда будем слать текст)
     receive(msg: String) {
         let ctx: Context = context();
         require(ctx.value >= ton("0.02"), "Insufficient gas for voting");
@@ -34,23 +32,19 @@ contract CommunityPassCollection with Deployable {
 
         let prev_vote: Int? = self.voted.get(ctx.sender);
 
-        // Отменяем старый голос, если человек переголосовывает
         if (prev_vote != null) {
             if (prev_vote == 1) { self.votes_yes = self.votes_yes - 1; }
             else if (prev_vote == 2) { self.votes_no = self.votes_no - 1; }
             else if (prev_vote == 3) { self.votes_raise = self.votes_raise - 1; }
         }
 
-        // Записываем новый голос в статистику
         if (option == 1) { self.votes_yes = self.votes_yes + 1; }
         else if (option == 2) { self.votes_no = self.votes_no + 1; }
         else if (option == 3) { self.votes_raise = self.votes_raise + 1; }
 
-        // Сохраняем выбор пользователя в словаре
         self.voted.set(ctx.sender, option);
     }
 
-    // Твой старый receive для Минта
     receive(msg: Slice) {
         let op = msg.loadUint(32);
 
@@ -99,7 +93,6 @@ contract CommunityPassCollection with Deployable {
         return contractAddress(nft_init);
     }
 
-    // НОВЫЕ ГЕТТЕРЫ ДЛЯ ЧТЕНИЯ ДАННЫХ В REACT
     get fun get_voting_stats(): VotingStats {
         return VotingStats{
             yes: self.votes_yes,
@@ -114,7 +107,6 @@ contract CommunityPassCollection with Deployable {
     }
 }
 
-// НОВАЯ СТРУКТУРА
 struct VotingStats {
     yes: Int;
     no: Int;

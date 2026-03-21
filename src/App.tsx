@@ -11,11 +11,9 @@ function App() {
   const [nftData, setNftData] = useState<{ owned: boolean, index?: number } | null>(null);
   const [loading, setLoading] = useState(false);
   
-  // Стейты для DAO
   const [vote, setVote] = useState<string | null>(null);
   const [voteStats, setVoteStats] = useState({ yes: 0, no: 0, raise: 0, total: 0 });
 
-  // --- ФУНКЦИЯ ПРОВЕРКИ NFT ---
   const checkOwnership = async (address: string) => {
     setLoading(true);
     try {
@@ -34,7 +32,6 @@ function App() {
     setLoading(false);
   };
 
-  // --- ФУНКЦИЯ МИНТА NFT ---
   const mintNft = async () => {
     const body = beginCell()
       .storeUint(0x2F47783B, 32)
@@ -60,14 +57,12 @@ function App() {
     }
   };
 
-  // --- 1. Читаем ОБЩУЮ статистику напрямую со смарт-контракта ---
   const fetchVotingStats = async () => {
     try {
       const res = await fetch(`https://tonapi.io/v2/blockchain/accounts/${COLLECTION_ADDRESS}/methods/get_voting_stats`);
       const data = await res.json();
       
       if (data.success && data.stack.length === 4) {
-        // parseInt безопасно парсит и hex (0x...) и обычные числа
         setVoteStats({
           yes: parseInt(data.stack[0].num),
           no: parseInt(data.stack[1].num),
@@ -80,13 +75,11 @@ function App() {
     }
   };
 
-  // --- 2. Читаем ЛИЧНЫЙ голос юзера со смарт-контракта ---
   const fetchUserVote = async (address: string) => {
     try {
       const res = await fetch(`https://tonapi.io/v2/blockchain/accounts/${COLLECTION_ADDRESS}/methods/get_user_vote?args=${address}`);
       const data = await res.json();
       
-      // 👈 Добавил проверку на наличие данных в stack
       if (data.success && data.stack && data.stack.length > 0 && data.stack[0].type === 'num') {
         const val = parseInt(data.stack[0].num);
         if (val === 1) setVote('vote_yes');
@@ -98,7 +91,6 @@ function App() {
     }
   };
 
-  // Вызываем при загрузке
   useEffect(() => {
     fetchVotingStats(); 
     if (userAddress) {
@@ -110,7 +102,6 @@ function App() {
     }
   }, [userAddress]);
 
-  // --- 3. ОТПРАВЛЯЕМ ТРАНЗАКЦИЮ ГОЛОСОВАНИЯ ---
   const handleVote = async (option: string) => {
     const body = beginCell()
       .storeUint(0, 32)
@@ -138,7 +129,6 @@ function App() {
     }
   };
 
-  // --- ФУНКЦИЯ ДЛЯ ОТРИСОВКИ ШКАЛЫ ГОЛОСОВАНИЯ ---
   const renderProgressBar = (option: 'yes' | 'no' | 'raise', label: string, color: string) => {
     const count = voteStats[option] || 0;
     const percent = voteStats.total > 0 ? Math.round((count / voteStats.total) * 100) : 0;
@@ -178,17 +168,14 @@ function App() {
             <p>Вы являетесь участником сообщества.</p>
             <p>Наш чат: <a href="https://t.me/+RxLNa8Oqxv_IgCqd" target="_blank" rel="noreferrer" style={{color: '#0088cc'}}>перейти</a></p>
 
-            {/* БЛОК ОПРОСА ДЛЯ УЧАСТНИКОВ */}
             <div style={{ marginTop: '40px', padding: '20px', background: '#2a2a2a', borderRadius: '15px', border: '1px solid #444' }}>
-              <h3>🗳 Голосование сообщества</h3>
+              <h3>Голосование сообщества</h3>
               <p style={{ marginBottom: '20px' }}>Понизить стоимость минта до 0.15 TON?</p>
               
-              {/* РИСУЕМ КРАСИВЫЕ ПРОГРЕСС-БАРЫ */}
               {renderProgressBar('yes', 'Да', '#4caf50')}
               {renderProgressBar('no', 'Нет', '#f44336')}
               {renderProgressBar('raise', 'Повысить до 0.3', '#ff9800')}
 
-              {/* КНОПКИ ДЛЯ ГОЛОСОВАНИЯ */}
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '25px', flexWrap: 'wrap' }}>
                 <button 
                   onClick={() => handleVote('vote_yes')}

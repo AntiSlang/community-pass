@@ -11,7 +11,7 @@ export async function run(provider: NetworkProvider) {
     const code = Cell.fromBoc(Buffer.from(codeB64, 'base64'))[0];
     
     const data = beginCell()
-        .storeUint(800, 32)
+        .storeUint(801, 32)
         .storeAddress(provider.sender().address)
         .endCell();
 
